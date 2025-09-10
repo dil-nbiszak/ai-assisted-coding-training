@@ -6,19 +6,38 @@ import { TodoContext } from './TodoContextType';
 export const TodoProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [todos, setTodos] = useState<Todo[]>([]);
 
-  const addTodo = (title: string, description: string) => {
+  const isValidDateOnly = (value: string | undefined): value is string => {
+    if (!value) return false;
+    const dateOnlyRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateOnlyRegex.test(value)) return false;
+    const d = new Date(value);
+    return !isNaN(d.getTime());
+  };
+
+  const addTodo = (title: string, description: string, dueDate?: string) => {
+    const normalizedDueDate = isValidDateOnly(dueDate) ? dueDate : undefined;
     const newTodo: Todo = {
       id: uuidv4(),
       title,
       description,
       completed: false,
       createdAt: new Date(),
+      dueDate: normalizedDueDate,
     };
     setTodos([...todos, newTodo]);
   };
 
   const editTodo = (id: string, updates: Partial<Todo>) => {
-    setTodos(todos.map(todo => (todo.id === id ? { ...todo, ...updates } : todo)));
+    const normalizedUpdates: Partial<Todo> = {
+      ...updates,
+      dueDate:
+        updates.dueDate && isValidDateOnly(updates.dueDate)
+          ? updates.dueDate
+          : updates.dueDate
+            ? undefined
+            : updates.dueDate,
+    };
+    setTodos(todos.map(todo => (todo.id === id ? { ...todo, ...normalizedUpdates } : todo)));
   };
 
   const toggleTodoCompletion = (id: string) => {

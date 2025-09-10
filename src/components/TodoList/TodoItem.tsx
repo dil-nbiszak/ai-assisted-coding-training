@@ -1,5 +1,14 @@
 import React from 'react';
-import { ListItem, ListItemText, IconButton, Checkbox, Divider, Typography } from '@mui/material';
+import {
+  ListItem,
+  ListItemText,
+  IconButton,
+  Checkbox,
+  Divider,
+  Typography,
+  Stack,
+} from '@mui/material';
+import { format, startOfDay } from 'date-fns';
 import type { Todo } from '../../types/Todo';
 import { useTodo } from '../../hooks/useTodo';
 
@@ -62,15 +71,36 @@ export const TodoItem: React.FC<TodoItemProps> = ({ todo, onEditClick }) => {
             </Typography>
           }
           secondary={
-            <Typography
-              variant="body2"
-              sx={{
-                color: 'text.secondary',
-                textDecoration: todo.completed ? 'line-through' : 'none',
-              }}
-            >
-              {todo.description}
-            </Typography>
+            <Stack spacing={0.25}>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: 'text.secondary',
+                  textDecoration: todo.completed ? 'line-through' : 'none',
+                }}
+              >
+                {todo.description}
+              </Typography>
+              {(() => {
+                if (!todo.dueDate) return null;
+                const parsed = new Date(todo.dueDate);
+                if (isNaN(parsed.getTime())) return null;
+                const overdue = parsed < startOfDay(new Date());
+                const formatted = format(parsed, 'PP');
+                return (
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: overdue ? 'error.main' : 'text.secondary',
+                      fontWeight: overdue ? 600 : 400,
+                    }}
+                    data-testid="todo-due-date"
+                  >
+                    Due: {formatted}
+                  </Typography>
+                );
+              })()}
+            </Stack>
           }
         />
       </ListItem>
